@@ -3,31 +3,37 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp">
+    android:background="#0F172A"
+    android:padding="20dp">
 
     <Button
         android:id="@+id/btn_scan"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scan Wi-Fi for Devices"
-        android:backgroundTint="#2563eb"
+        android:layout_height="60dp"
+        android:text="SCAN WI-FI FOR DEVICES"
+        android:backgroundTint="#2563EB"
         android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp"/>
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Select a device to cast to:"
-        android:textColor="#AAAAAA"
-        android:layout_marginBottom="8dp"/>
+        android:text="Available Devices"
+        android:textColor="#94A3B8"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textAllCaps="true"
+        android:layout_marginBottom="12dp"/>
 
     <ListView
         android:id="@+id/lv_devices"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="#333333"
-        android:dividerHeight="1dp"/>
+        android:divider="@null"
+        android:dividerHeight="8dp"
+        android:scrollbars="none"/>
 
 </LinearLayout>
 

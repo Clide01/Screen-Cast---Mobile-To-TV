@@ -7,9 +7,12 @@ import android.media.projection.MediaProjectionManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.text.format.Formatter
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -23,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var projectionManager: MediaProjectionManager
     private val deviceScanner = DeviceScanner()
     private val discoveredList = mutableListOf<DiscoveredDevice>()
-    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var adapter: ArrayAdapter<DiscoveredDevice>
     private var selectedTargetIp: String? = null
 
     private val startMediaProjection = registerForActivityResult(
@@ -32,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK && selectedTargetIp != null) {
             val data = result.data ?: return@registerForActivityResult
             
-            // Pass the selected App and the target IP to the background service
             val serviceIntent = Intent(this, ScreenCaptureService::class.java).apply {
                 putExtra("RESULT_CODE", result.resultCode)
                 putExtra("RESULT_DATA", data)
@@ -52,8 +54,19 @@ class MainActivity : AppCompatActivity() {
         val listView = findViewById<ListView>(R.id.lv_devices)
         val btnScan = findViewById<Button>(R.id.btn_scan)
 
-        // Simple list adapter to display "IP Address - Device Type"
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
+        // Custom Adapter to handle our new UI layout
+        adapter = object : ArrayAdapter<DiscoveredDevice>(this, R.layout.item_device, discoveredList) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: layoutInflater.inflate(R.layout.item_device, parent, false)
+                val device = getItem(position)
+                
+                view.findViewById<TextView>(R.id.tv_device_name).text = device?.type ?: "Unknown Device"
+                view.findViewById<TextView>(R.id.tv_device_ip).text = device?.ipAddress ?: ""
+                
+                return view
+            }
+        }
+        
         listView.adapter = adapter
 
         btnScan.setOnClickListener {
@@ -64,7 +77,6 @@ class MainActivity : AppCompatActivity() {
             val device = discoveredList[position]
             selectedTargetIp = device.ipAddress
             
-            // Trigger Android 14's app selector
             val captureIntent = projectionManager.createScreenCaptureIntent()
             startMediaProjection.launch(captureIntent)
         }
@@ -86,10 +98,6 @@ class MainActivity : AppCompatActivity() {
             
             discoveredList.clear()
             discoveredList.addAll(devices)
-            
-            adapter.clear()
-            // Format the list text
-            adapter.addAll(devices.map { "${it.ipAddress} \n${it.type}" })
             adapter.notifyDataSetChanged()
 
             if (devices.isEmpty()) {

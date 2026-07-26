@@ -30,7 +30,7 @@ class DeviceScanner {
                 var deviceName = "Network Device"
 
                 for (port in portsToScan) {
-                    if (isPortOpen(testIp, port, 150)) {
+                    if (isPortOpen(testIp, port, 400)) {
                         isAlive = true
                         if (port == 5173) {
                             deviceName = "AppCaster Receiver (React)"

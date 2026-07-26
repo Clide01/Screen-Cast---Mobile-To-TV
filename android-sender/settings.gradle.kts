@@ -1,4 +1,3 @@
-cat << 'EOF' > ~/AppCaster/android-sender/settings.gradle.kts
 pluginManagement {
     repositories {
         google()
@@ -16,5 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AppCaster"
 include(":app")
-EOF
 

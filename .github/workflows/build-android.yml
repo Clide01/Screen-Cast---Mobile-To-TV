@@ -26,7 +26,11 @@ jobs:
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
-          
+
+      # --- NEW STEP: Generate gradlew if it is missing ---
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 

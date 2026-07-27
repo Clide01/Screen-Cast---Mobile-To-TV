@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -15,36 +16,38 @@ class DeviceScanner {
         val subnet = localIp.substringBeforeLast(".")
         val discoveredDevices = mutableListOf<DiscoveredDevice>()
 
-        // Common ports to detect if a device is online
-        val portsToScan = listOf(
-            5173, // Your React TV Receiver
-            80,   // Standard Routers / Smart Devices
-            443,  // Secure Web Devices
-            8080  // Common Development Port
-        )
-
         val jobs = (1..254).map { host ->
             async {
                 val testIp = "$subnet.$host"
-                var isAlive = false
-                var deviceName = "Network Device"
-
-                for (port in portsToScan) {
-                    if (isPortOpen(testIp, port, 400)) {
-                        isAlive = true
-                        if (port == 5173) {
-                            deviceName = "AppCaster Receiver (React)"
+                try {
+                    val inetAddress = InetAddress.getByName(testIp)
+                    
+                    // 1. Standard Ping: Send an ICMP request to see if the device exists
+                    if (inetAddress.isReachable(300)) {
+                        // The device replied! Now check if our React app is running on it
+                        if (isPortOpen(testIp, 5173, 200)) {
+                            DiscoveredDevice(testIp, "AppCaster Receiver (React)")
+                        } else {
+                            DiscoveredDevice(testIp, "Network Device (Alive)")
                         }
-                        break // Stop checking ports once we know it's alive
+                    } else {
+                        // 2. Fallback: Some modern TVs/Phones block pings for security.
+                        // We will forcefully check the React port and standard web port just in case.
+                        if (isPortOpen(testIp, 5173, 200)) {
+                            DiscoveredDevice(testIp, "AppCaster Receiver (React)")
+                        } else if (isPortOpen(testIp, 80, 200)) {
+                            DiscoveredDevice(testIp, "Router / Smart TV")
+                        } else {
+                            null
+                        }
                     }
+                } catch (e: Exception) {
+                    null
                 }
-
-                if (isAlive) {
-                    DiscoveredDevice(ipAddress = testIp, type = deviceName)
-                } else null
             }
         }
 
+        // Wait for all 254 IP addresses to finish scanning and filter out the nulls
         jobs.awaitAll().filterNotNull().toCollection(discoveredDevices)
     }
 
